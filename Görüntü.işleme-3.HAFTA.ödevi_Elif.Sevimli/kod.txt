@@ -1,0 +1,60 @@
+
+# Görüntü İşleme 3.Hafta Ödevi 
+# Elif SEVİMLİ  /  2023688059
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+madeni_bgr = cv2.imread("madeni.para.jpg")
+
+para_rgb = cv2.cvtColor(madeni_bgr, cv2.COLOR_BGR2RGB)
+plt.imshow(para_rgb)
+plt.title("RGB Formatında Resim")
+plt.show()
+para_gri = cv2.cvtColor(para_rgb, cv2.COLOR_RGB2GRAY)
+plt.imshow(para_gri, cmap='gray')
+plt.title("Gri Tonlamalı Resim")
+plt.show()
+
+bulanikk_para = cv2.GaussianBlur(para_gri, (7, 7), 0)
+
+_, madeni_bin = cv2.threshold(bulanikk_para, 185, 255, cv2.THRESH_BINARY)
+plt.imshow(madeni_bin, cmap='gray')
+plt.title("Binary Resim (Eşikleme)")
+plt.show()
+
+kenar_para = cv2.Canny(madeni_bin, 100, 200)
+plt.imshow(kenar_para, cmap='gray')
+plt.title("Canny Kenar Bulma")
+plt.show()
+
+contours, hierarchy = cv2.findContours(kenar_para, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+kontorlu_para = para_rgb.copy()
+
+for i, kontor in enumerate(contours):
+    if cv2.contourArea(kontor) > 180:  
+        (x, y), radius = cv2.minEnclosingCircle(kontor)
+        center = (int(x), int(y))
+        radius = int(radius)
+        cv2.circle(kontorlu_para, center, radius, (255, 0, 0), 4)
+
+        x, y, w, h = cv2.boundingRect(kontor)
+        cv2.rectangle(kontorlu_para, (x, y), (x + w, y + h), (0, 255, 0), 4)
+        cv2.putText(kontorlu_para, "E.S", (x + w // 2 - 20, y + h // 2), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+
+plt.imshow(kontorlu_para)
+plt.title("Kontur Tespiti ve Çizimler")
+plt.show()
+sorted_contours = sorted(contours, key=cv2.contourArea)  
+
+kontorlu_para = para_rgb.copy() 
+for i, kontor in enumerate(sorted_contours[:8]):  
+    if cv2.contourArea(kontor) > 180: 
+        x, y, w, h = cv2.boundingRect(kontor)
+        cv2.rectangle(kontorlu_para, (x, y), (x + w, y + h), (0, 255, 0), 4)
+        cv2.putText(kontorlu_para, str(i + 1), (x + w // 2 - 10, y + h // 2), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 2)
+
+plt.imshow(kontorlu_para)
+plt.title("Numaralandırılmış Paralar")
+plt.show()
